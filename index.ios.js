@@ -15,25 +15,56 @@ import {
 
 class CodePushExample extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
   componentDidMount() {
-    codePush.sync({ updateDialog: true, installMode: codePush.InstallMode.IMMEDIATE });
+    codePush.sync({ updateDialog: true, installMode: codePush.InstallMode.IMMEDIATE },
+      (status) => {
+          switch (status) {
+            case codePush.SyncStatus.DOWNLOADING_PACKAGE:
+              this.setState({status: 'Downloading'});
+              break;
+            case codePush.SyncStatus.INSTALLING_UPDATE:
+              this.setState({status: 'Installing'});
+              break;
+          }
+      },
+      ({ receivedBytes, totalBytes, }) => {
+        this.setState({receivedBytes, totalBytes});
+      }
+   );
   }
 
   render() {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>
-          This update was downloaded!
+          Hello from React Native!
         </Text>
         <Text style={styles.instructions}>
-          To get started, edit index.ios.js
+          {this.state.status}
         </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+        {this._renderProgress()}
       </View>
     );
+  }
+
+  _renderProgress() {
+    if (this.state.status === 'Downloading') {
+      let progress = 0;
+      if (typeof this.state.receivedBytes === 'number' && this.state.totalBytes === 'number') {
+        progress = Math.round(this.state.receivedBytes / this.state.totalBytes * 100);
+      }
+
+      return (
+        <Text style={styles.instructions}>
+          {progress}%
+        </Text>
+      );
+    }
   }
 }
 
